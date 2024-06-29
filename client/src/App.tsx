@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import CryptoJS from "crypto-js";
 
 const API_URL = "http://localhost:8080";
 
 function App() {
-  const [data, setData] = useState<string>();
+  const [data, setData] = useState<string>("");
+  const [hash, setHash] = useState<string>("");
 
   useEffect(() => {
     getData();
@@ -13,6 +15,7 @@ function App() {
     const response = await fetch(API_URL);
     const { data } = await response.json();
     setData(data);
+    setHash(createHash(data)); // Store hash of the data
   };
 
   const updateData = async () => {
@@ -28,8 +31,30 @@ function App() {
     await getData();
   };
 
-  const verifyData = async () => {
-    throw new Error("Not implemented");
+  const verifyData = () => {
+    const currentHash = createHash(data);
+    if (currentHash === hash) {
+      alert("Data is valid");
+    } else {
+      alert("Data has been tampered with! Recovering last known valid data.");
+      recoverData();
+    }
+  };
+
+  const recoverData = async () => {
+    const response = await fetch(`${API_URL}/history`);
+    const history = await response.json();
+    if (history.length > 0) {
+      const latestValidData = history[0].data; // Get the last valid version
+      setData(latestValidData);
+      setHash(createHash(latestValidData));
+    } else {
+      alert("No recovery data available.");
+    }
+  };
+
+  const createHash = (data: string) => {
+    return CryptoJS.SHA256(data).toString();
   };
 
   return (

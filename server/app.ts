@@ -4,6 +4,7 @@ import cors from "cors";
 const PORT = 8080;
 const app = express();
 const database = { data: "Hello World" };
+const history = [{ data: "Hello World", timestamp: new Date() }];
 
 app.use(cors());
 app.use(express.json());
@@ -16,7 +17,12 @@ app.get("/", (req, res) => {
 
 app.post("/", (req, res) => {
   database.data = req.body.data;
+  history.unshift({ data: req.body.data, timestamp: new Date() }); // Save to history
   res.sendStatus(200);
+});
+
+app.get("/history", (req, res) => {
+  res.json(history);
 });
 
 app.listen(PORT, () => {
